@@ -3,9 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using PizzaStore.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("Pizzas") ?? "Data Source = Pizzas.db";
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddDbContext<PizzaDb>(options => options.UseInMemoryDatabase("items"));
+builder.Services.AddSqlite<PizzaDb>(connectionString);
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -36,5 +37,24 @@ app.MapPost("/pizzas", async (PizzaDb db, Pizza pizza) =>
     return Results.Created($"/pizzas/{pizza.Id}", pizza);
 });
 app.MapGet("/pizzas/{id}", async (PizzaDb db, UInt16 id) => await db.Pizzas.FindAsync(id));
+app.MapPut("/pizzas/{id}", async (PizzaDb db, Pizza updatedPizza, UInt16 id) =>
+{
+    var pizza = await db.Pizzas.FindAsync(id);
+    if (pizza == null) return Results.NotFound();
+    pizza.Name = updatedPizza.Name;
+    pizza.Description = updatedPizza.Description;
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+});
+app.MapDelete("/pizzas/{id}", async (PizzaDb db, UInt16 id) =>
+{
+    var pizza = await db.Pizzas.FindAsync(id);
+    if (pizza == null) return Results.NotFound();
+    db.Pizzas.Remove(pizza);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
 
 app.Run();

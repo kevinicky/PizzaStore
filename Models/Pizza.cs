@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 
 namespace PizzaStore.Models;
@@ -12,5 +13,5 @@ public class Pizza
 public class PizzaDb : DbContext
 {
     public PizzaDb(DbContextOptions options) : base(options) { }
-    public DbSet<Pizza> Pizzas { get; set; } = null!;
+    public DbSet<Pizza> Pizzas { get; init; } = null!;
 }
